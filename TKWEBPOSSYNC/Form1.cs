@@ -29,6 +29,11 @@ namespace TKWEBPOSSYNC
         SqlCommandBuilder sqlCmdBuilder1 = new SqlCommandBuilder();
         DataSet ds1 = new DataSet();
 
+        DataTable table = new DataTable();
+        DataTable MStable = new DataTable();
+        DataTable MYtable = new DataTable();
+
+
         public Form1()
         {
             InitializeComponent();
@@ -53,10 +58,10 @@ namespace TKWEBPOSSYNC
             conn.Open();
     
             MySqlDataAdapter MyDA = new MySqlDataAdapter();
-            string sqlSelectAll = "SELECT ID,NAME,EMAIL FROM NEWDB.NEWTB";
+            string sqlSelectAll = "SELECT NAME,EMAIL FROM NEWDB.NEWTB";
             MyDA.SelectCommand = new MySqlCommand(sqlSelectAll, conn);
 
-            DataTable table = new DataTable();
+            table.Clear();
             MyDA.Fill(table);
 
             BindingSource bSource = new BindingSource();
@@ -76,7 +81,7 @@ namespace TKWEBPOSSYNC
 
                 sbSql.Clear();   
             
-                sbSql.AppendFormat(@" SELECT [ID],[NAME],[EMAIL] FROM [TKWEBPOSSYNC].[dbo].[NEWTB] ");
+                sbSql.AppendFormat(@" SELECT [NAME],[EMAIL] FROM [TKWEBPOSSYNC].[dbo].[NEWTB] ");
 
                 adapter1 = new SqlDataAdapter(@"" + sbSql, sqlConn);
 
@@ -114,6 +119,29 @@ namespace TKWEBPOSSYNC
             }
         }
 
+        public void SEARCHEXCEPT()
+        {
+            if(table.Rows.Count>=1 && ds1.Tables["TEMPds1"].Rows.Count>=1)
+            {
+                MYtable = table;
+                MStable = ds1.Tables["TEMPds1"];
+
+                var DIFF = MYtable.AsEnumerable().Except(MStable.AsEnumerable(), DataRowComparer.Default);
+
+
+                // Create a table from the query.
+                DataTable DIFFTABLE = DIFF.CopyToDataTable<DataRow>();
+
+                if (DIFFTABLE.Rows.Count >= 1)
+                {
+                    dataGridView1.DataSource = DIFFTABLE;
+                    dataGridView1.AutoResizeColumns();
+                }
+
+            }
+        }
+
+
         #endregion
 
         #region BUTTON
@@ -128,6 +156,12 @@ namespace TKWEBPOSSYNC
         private void button2_Click(object sender, EventArgs e)
         {
             SEARCHTKWEBPOSSYNC();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            SEARCHEXCEPT();
+
         }
     }
 }
