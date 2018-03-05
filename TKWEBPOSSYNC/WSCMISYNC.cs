@@ -155,7 +155,7 @@ namespace TKWEBPOSSYNC
                 sqlCmdBuilder = new SqlCommandBuilder(adapter);
 
                 sqlConn.Open();
-                dsMYSQLWSCMISYNC.Clear();
+                dsMYSQLWSCMISYNCUPDATE.Clear();
                 //dataGridView1.Columns.Clear();
 
 
@@ -192,7 +192,7 @@ namespace TKWEBPOSSYNC
             MySqlCommand UPDATENewCmd;
             StringBuilder UPDATENew = new StringBuilder();
 
-            foreach (DataRow od in dsMYSQLWSCMISYNC.Tables["MYSQLWSCMISYNC"].Rows)
+            foreach (DataRow od in dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows)
             {
                 UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE MI001='{0}' ", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
                 UPDATENew.AppendFormat(@" ");
@@ -308,7 +308,8 @@ namespace TKWEBPOSSYNC
 
         private void button2_Click(object sender, EventArgs e)
         {
-            INSERTTOMYSQLWSCMISYNC();
+            //INSERTTOMYSQLWSCMISYNC();
+            UPDATEMYSQLWSCMISYNC();
         }
         #endregion
 
