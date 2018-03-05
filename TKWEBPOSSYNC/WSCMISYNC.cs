@@ -31,6 +31,7 @@ namespace TKWEBPOSSYNC
         DataSet ds = new DataSet();
 
         DataSet dsMYSQLWSCMISYNC = new DataSet();
+        DataSet dsMYSQLWSCMISYNCUPDATE = new DataSet();
         int result;
 
         string SYNC = "N";
@@ -59,6 +60,7 @@ namespace TKWEBPOSSYNC
                 label4.Text = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
 
                 //INSERTTOMYSQLWSCMISYNC();
+                //UPDATEMYSQLWSCMISYNC();
                 //INSERTLOGWSCMIBOUNS("GO");
                 //INSERTLOGLOGWSCMISYNC("GO");
             }
@@ -133,6 +135,75 @@ namespace TKWEBPOSSYNC
             AddNewCmd.ExecuteNonQuery();
         }
 
+
+        public void UPDATEMYSQLWSCMISYNC()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sbSql.AppendFormat(@" SELECT  A.MI001, A.EMAIL, A.NAME, A.PHONE, A.ADDRESS, A.TEL, CONVERT(varchar(100),A.BIRTHDAY,111) AS BIRTHDAY, A.PASSWORD, A.SEX, A.FORM, A.STATUS ");
+                sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC] A ");
+                sbSql.AppendFormat(@" INNER JOIN OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') B  ");
+                sbSql.AppendFormat(@" ON A.MI001=B.MI001 AND (A.EMAIL<>B.EMAIL OR A.NAME<>B.NAME OR A.PHONE<>B.PHONE OR A.ADDRESS<>B.ADDRESS OR A.TEL<>B.TEL OR A.BIRTHDAY<>B.BIRTHDAY OR A.SEX<>B.SEX )");
+                sbSql.AppendFormat(@" AND A.STATUS='N'");
+                sbSql.AppendFormat(@" ");
+                sbSql.AppendFormat(@" ");
+
+                adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
+                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+
+                sqlConn.Open();
+                dsMYSQLWSCMISYNC.Clear();
+                //dataGridView1.Columns.Clear();
+
+
+                adapter.Fill(dsMYSQLWSCMISYNCUPDATE, "MYSQLWSCMISYNCUPDATE");
+                sqlConn.Close();
+
+                if (dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows.Count == 0)
+                {
+
+                }
+                else if (dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows.Count >= 1)
+                {
+                    UPDATETOMYSQLWSCMISYNC();
+                }
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
+
+        public void UPDATETOMYSQLWSCMISYNC()
+        {
+            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+
+            MySqlConnection conn = new MySqlConnection(connString);
+            conn.Open();
+
+            MySqlCommand UPDATENewCmd;
+            StringBuilder UPDATENew = new StringBuilder();
+
+            foreach (DataRow od in dsMYSQLWSCMISYNC.Tables["MYSQLWSCMISYNC"].Rows)
+            {
+                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE MI001='{0}' ", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
+                UPDATENew.AppendFormat(@" ");
+
+            }
+
+            UPDATENewCmd = new MySqlCommand(UPDATENew.ToString(), conn);
+            UPDATENewCmd.Connection = conn;
+            //執行新增
+            UPDATENewCmd.ExecuteNonQuery();
+        }
         public void INSERTLOGLOGWSCMISYNC(string message)
         {
             try
