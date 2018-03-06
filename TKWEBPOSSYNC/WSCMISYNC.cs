@@ -264,8 +264,14 @@ namespace TKWEBPOSSYNC
                 tran = sqlConn.BeginTransaction();
 
                 sbSql.Clear();
-
-
+                sbSql.AppendFormat(" INSERT INTO [test].[dbo].[LOG_WSCMI]");
+                sbSql.AppendFormat(" ([TRS_CODE],[TRS_DATE],[TRS_TIME],[store_ip],[sync_date],[sync_time],[sync_mark],[sync_count],[MI001])");
+                sbSql.AppendFormat(" SELECT '2' AS [TRS_CODE],convert(varchar, getdate(), 112) AS [TRS_DATE],convert(varchar, getdate(), 108) AS [TRS_TIME]");
+                sbSql.AppendFormat(" ,PI010 AS [store_ip]");
+                sbSql.AppendFormat(" ,NULL AS [sync_date],NULL AS [sync_time],'N' AS [sync_mark],'0' AS [sync_count],TEMP.MI001 AS [MI001]");
+                sbSql.AppendFormat(" FROM (SELECT MI001 FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
+                sbSql.AppendFormat(" WHERE A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])) AS TEMP, [test].[dbo].[POSPI]");
+                sbSql.AppendFormat(" ");
                 sbSql.AppendFormat(" INSERT INTO [test].[dbo].[WSCMI]");
                 sbSql.AppendFormat(" ([COMPANY],[CREATOR],[USR_GROUP],[CREATE_DATE],[MODIFIER],[MODI_DATE],[FLAG],[CREATE_TIME],[MODI_TIME],[TRANS_TYPE]");
                 sbSql.AppendFormat(" ,[TRANS_NAME],[sync_date],[sync_time],[sync_mark],[sync_count],[DataUser],[DataGroup],[MI001],[MI002],[MI003]");
