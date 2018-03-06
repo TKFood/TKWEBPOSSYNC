@@ -33,6 +33,7 @@ namespace TKWEBPOSSYNC
         DataSet dsMYSQLWSCMISYNC = new DataSet();
         DataSet dsMYSQLWSCMISYNCUPDATE = new DataSet();
         DataSet dsMSSQLWSCMI = new DataSet();
+        DataSet dsMYSQLWSCMIBOUNS = new DataSet();
 
         int result;
 
@@ -60,11 +61,7 @@ namespace TKWEBPOSSYNC
             if(SYNC.Equals("Y"))
             {
                 label4.Text = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
-
-                //INSERTTOMYSQLWSCMISYNC();
-                //UPDATEMYSQLWSCMISYNC();
-                //INSERTLOGWSCMIBOUNS("GO");
-                //INSERTLOGLOGWSCMISYNC("GO");
+             
             }
 
 
@@ -386,6 +383,76 @@ namespace TKWEBPOSSYNC
             }
         }
 
+        public void INSERTTOMYSQLWSCMIBOUNS()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sbSql.Clear();
+                sbSql.AppendFormat(@" SELECT [ID],[MI001],[MI037OLD],[MI037NEW],CONVERT(varchar(100),[DATE],111) AS [DATE],[FORM],[STATUS]");
+                sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMIBOUNS] A");
+                sbSql.AppendFormat(@" WHERE[STATUS] = 'N'");
+                sbSql.AppendFormat(@" AND NOT EXISTS (SELECT ID,FORM FROM  OPENQUERY(MYSQL, 'SELECT ID,FORM FROM NEWDB.WSCMIBOUNS') B WHERE A.ID=B.ID AND A.FORM=B.FORM)");
+                sbSql.AppendFormat(@" ");
+                sbSql.AppendFormat(@" ");
+
+                adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
+                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+
+                sqlConn.Open();
+                dsMYSQLWSCMIBOUNS.Clear();
+                //dataGridView1.Columns.Clear();
+
+
+                adapter.Fill(dsMYSQLWSCMIBOUNS, "MYSQLWSCMIBOUNS");
+                sqlConn.Close();
+
+                if (dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows.Count == 0)
+                {
+
+                }
+                else if (dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows.Count >= 1)
+                {
+                    ADDTOMYSQLWSCMIBOUNS();
+                }
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
+
+        public void ADDTOMYSQLWSCMIBOUNS()
+        {
+            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+
+            MySqlConnection conn = new MySqlConnection(connString);
+            conn.Open();
+
+            MySqlCommand AddNewCmd;
+            StringBuilder AddNew = new StringBuilder();
+
+            foreach (DataRow od in dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows)
+            {
+                AddNew.AppendFormat(@" ");
+                AddNew.AppendFormat(@" INSERT INTO NEWDB.WSCMIBOUNS(ID,MI001,MI037OLD,MI037NEW,DATE,FORM,STATUS) VALUES('{0}','{1}',{2},{3},'{4}','{5}','{6}'); ", od["ID"].ToString(), od["MI001"].ToString(), od["MI037OLD"].ToString(), od["MI037NEW"].ToString(), od["DATE"].ToString(), od["FORM"].ToString(), od["STATUS"].ToString());
+                AddNew.AppendFormat(@" ");
+
+            }
+
+            AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            AddNewCmd.Connection = conn;
+            //執行新增
+            AddNewCmd.ExecuteNonQuery();
+        }
+
         public void INSERTLOGLOGWSCMISYNC(string message)
         {
             try
@@ -497,7 +564,8 @@ namespace TKWEBPOSSYNC
             //INSERTTOMYSQLWSCMISYNC();
             //UPDATEMYSQLWSCMISYNC();
             //INSERTTOMSSQLWSCMI();
-            UPDATETOMSSQLWSCMI();
+            //UPDATETOMSSQLWSCMI();
+            INSERTTOMYSQLWSCMIBOUNS();
         }
         #endregion
 
