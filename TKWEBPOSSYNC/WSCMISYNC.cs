@@ -330,6 +330,62 @@ namespace TKWEBPOSSYNC
             }
         }
 
+        public void UPDATETOMSSQLWSCMI()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sqlConn.Close();
+                sqlConn.Open();
+                tran = sqlConn.BeginTransaction();
+
+                sbSql.Clear();
+                sbSql.AppendFormat(" UPDATE [test].[dbo].[LOG_WSCMI]");
+                sbSql.AppendFormat(" SET [sync_mark]='N'");
+                sbSql.AppendFormat(" WHERE [LOG_WSCMI].MI001 IN (SELECT A.MI001");
+                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
+                sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
+                sbSql.AppendFormat(" WHERE A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010)");
+                sbSql.AppendFormat(" ");
+                sbSql.AppendFormat(" UPDATE [test].[dbo].[WSCMI]  ");
+                sbSql.AppendFormat(" SET MI031=A.EMAIL,MI002=A.NAME,MI029=A.PHONE,MI003=A.ADDRESS,MI004=A.TEL,MI005=convert(varchar, A.BIRTHDAY,112),MI010= A.SEX");
+                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
+                sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
+                sbSql.AppendFormat(" WHERE A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010");
+                sbSql.AppendFormat(" ");
+
+
+                cmd.Connection = sqlConn;
+                cmd.CommandTimeout = 60;
+                cmd.CommandText = sbSql.ToString();
+                cmd.Transaction = tran;
+                result = cmd.ExecuteNonQuery();
+
+                if (result == 0)
+                {
+                    tran.Rollback();    //交易取消
+                }
+                else
+                {
+                    tran.Commit();      //執行交易  
+
+
+                }
+
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
+
         public void INSERTLOGLOGWSCMISYNC(string message)
         {
             try
@@ -439,8 +495,9 @@ namespace TKWEBPOSSYNC
         private void button2_Click(object sender, EventArgs e)
         {
             //INSERTTOMYSQLWSCMISYNC();
-            // UPDATEMYSQLWSCMISYNC();
-            INSERTTOMSSQLWSCMI();
+            //UPDATEMYSQLWSCMISYNC();
+            //INSERTTOMSSQLWSCMI();
+            UPDATETOMSSQLWSCMI();
         }
         #endregion
 
