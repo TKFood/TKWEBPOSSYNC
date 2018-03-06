@@ -504,6 +504,7 @@ namespace TKWEBPOSSYNC
         {
             string DAYNO = DateTime.Now.ToString("yyyyMMdd");
             string NP001=GETMAXTWSCNP(DAYNO);
+            string TU006 = "0"+NP001.Substring(8, 3);
 
             try
             {
@@ -542,7 +543,33 @@ namespace TKWEBPOSSYNC
                     sbSql.AppendFormat(" 0,0,0)");
                     sbSql.AppendFormat(" ");
                 }
-                    
+
+                foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
+                {
+                    sbSql.AppendFormat(" INSERT INTO [test].[dbo].[POSTU]");
+                    sbSql.AppendFormat(" ([COMPANY],[CREATOR],[USR_GROUP],[CREATE_DATE],[MODIFIER],[MODI_DATE],[FLAG],[CREATE_TIME],[MODI_TIME],[TRANS_TYPE]");
+                    sbSql.AppendFormat(" ,[TRANS_NAME],[sync_date],[sync_time],[sync_mark],[sync_count],[DataUser],[DataGroup],[TU001],[TU002],[TU003]");
+                    sbSql.AppendFormat(" ,[TU004],[TU005],[TU006],[TU007],[TU008],[TU009],[TU010],[TU011],[TU012],[TU013]");
+                    sbSql.AppendFormat(" ,[TU014],[TU015],[TU016],[TU017],[TU018],[TU019],[TU020],[TU021],[TU022],[TU023]");
+                    sbSql.AppendFormat(" ,[TU024],[TU025],[TU026],[TU027],[TU028],[TU029],[UDF01],[UDF02],[UDF03],[UDF04]");
+                    sbSql.AppendFormat(" ,[UDF05],[UDF06],[UDF07],[UDF08],[UDF09],[UDF10])");
+                    sbSql.AppendFormat(" VALUES('test','DS','DS','{0}','DS','{1}','2',convert(varchar, getdate(), 108),convert(varchar, getdate(), 108),'P004',", DAYNO, DAYNO);
+                    sbSql.AppendFormat(" 'POSI14',NULL,NULL,NULL,0,NULL,'DS','{0}','TK','000',", DAYNO);
+                    sbSql.AppendFormat(" '{0}',convert(varchar, getdate(), 108),'{1}','{2}','A','{3}','POSI14','N','2','N',", DAYNO, TU006, od["MI001"].ToString(), od["BOUNS"].ToString());
+                    sbSql.AppendFormat(" NULL,NULL,NULL,0,0,'{0}',0,0,0,0,", NP001);
+                    sbSql.AppendFormat(" NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,");
+                    sbSql.AppendFormat(" NULL,0,0,0,0,0)");
+                    sbSql.AppendFormat(" ");
+                }
+
+                sbSql.AppendFormat(" UPDATE [test].[dbo].[WSCMI]");
+                sbSql.AppendFormat(" SET [WSCMI].MI037=[WSCMI].MI037+TEMP.BOUNS");
+                sbSql.AppendFormat(" FROM [test].[dbo].[WSCMI]");
+                sbSql.AppendFormat(" INNER JOIN (SELECT A.MI001,SUM(A.MI037NEW-A.MI037OLD) AS BOUNS");
+                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT  MI001,MI037OLD,MI037NEW FROM NEWDB.WSCMIBOUNS WHERE FORM=''WEB'' AND STATUS=''N''') A");
+                sbSql.AppendFormat(" INNER JOIN [test].dbo.WSCMI B ON A.MI001=B.MI001");
+                sbSql.AppendFormat(" GROUP BY A.MI001) AS TEMP ON [WSCMI].MI001=TEMP.MI001");
+                sbSql.AppendFormat(" ");
 
 
                 cmd.Connection = sqlConn;
