@@ -34,6 +34,7 @@ namespace TKWEBPOSSYNC
         DataSet dsMYSQLWSCMISYNCUPDATE = new DataSet();
         DataSet dsMSSQLWSCMI = new DataSet();
         DataSet dsMYSQLWSCMIBOUNS = new DataSet();
+        DataSet dsMSSQLWSCMIBOUNS = new DataSet();
 
         int result;
 
@@ -453,6 +454,202 @@ namespace TKWEBPOSSYNC
             AddNewCmd.ExecuteNonQuery();
         }
 
+        public void INSERTTOMSSQLWSCMIBOUNS()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sbSql.Clear();
+              
+                sbSql.AppendFormat(@" SELECT A.MI001,SUM(A.MI037NEW-A.MI037OLD) AS BOUNS");
+                sbSql.AppendFormat(@" FROM  OPENQUERY(MYSQL, 'SELECT  MI001,MI037OLD,MI037NEW FROM NEWDB.WSCMIBOUNS WHERE FORM=''WEB'' AND STATUS=''N''') A");
+                sbSql.AppendFormat(@" INNER JOIN [test].dbo.WSCMI B ON A.MI001=B.MI001");
+                sbSql.AppendFormat(@" GROUP BY A.MI001");
+                sbSql.AppendFormat(@" ");
+
+                adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
+                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+
+                sqlConn.Open();
+                dsMSSQLWSCMIBOUNS.Clear();
+                //dataGridView1.Columns.Clear();
+
+
+                adapter.Fill(dsMSSQLWSCMIBOUNS, "MSSQLWSCMIBOUNS");
+                sqlConn.Close();
+
+                if (dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows.Count == 0)
+                {
+
+                }
+                else if (dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows.Count >= 1)
+                {
+                    ADDTOMSSQLWSCMI();
+                }
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
+
+        public void ADDTOMSSQLWSCMI()
+        {
+            string DAYNO = DateTime.Now.ToString("yyyyMMdd");
+            string NP001=GETMAXTWSCNP(DAYNO);
+
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sqlConn.Close();
+                sqlConn.Open();
+                tran = sqlConn.BeginTransaction();
+
+                sbSql.Clear();
+
+                sbSql.AppendFormat(" INSERT INTO [test].[dbo].[WSCNP]");
+                sbSql.AppendFormat(" ([COMPANY],[CREATOR],[USR_GROUP],[CREATE_DATE],[MODIFIER],[MODI_DATE],[FLAG],[CREATE_TIME],[MODI_TIME],[TRANS_TYPE]");
+                sbSql.AppendFormat(" ,[TRANS_NAME],[sync_date],[sync_time],[sync_mark],[sync_count],[DataUser],[DataGroup],[NP001],[NP002],[NP003]");
+                sbSql.AppendFormat(" ,[NP004],[NP005],[NP006],[NP007],[NP008],[NP009],[NP010],[NP011],[NP012],[UDF01]");
+                sbSql.AppendFormat(" ,[UDF02],[UDF03],[UDF04],[UDF05],[UDF06],[UDF07],[UDF08],[UDF09],[UDF10])");
+                sbSql.AppendFormat(" VALUES('test','DS','DS','{0}','DS','{1}','2',convert(varchar, getdate(), 108),convert(varchar, getdate(), 108),'P001',", DAYNO, DAYNO);
+                sbSql.AppendFormat(" 'POSI14',NULL,NULL,NULL,0,NULL,'DS','{0}','{1}','DS',", NP001, DAYNO);
+                sbSql.AppendFormat(" 'Y','{0}',NULL,NULL,NULL,NULL,NULL,0,0,NULL,", DAYNO);
+                sbSql.AppendFormat(" NULL,NULL,NULL,NULL,0,0,0,0,0)");
+                sbSql.AppendFormat(" ");
+
+                foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
+                {
+                    sbSql.AppendFormat(" INSERT INTO [test].[dbo].[WSCNQ]");
+                    sbSql.AppendFormat(" ([COMPANY],[CREATOR],[USR_GROUP],[CREATE_DATE],[MODIFIER],[MODI_DATE],[FLAG],[CREATE_TIME],[MODI_TIME],[TRANS_TYPE]");
+                    sbSql.AppendFormat(" ,[TRANS_NAME],[sync_date],[sync_time],[sync_mark],[sync_count],[DataUser],[DataGroup],[NQ001],[NQ002],[NQ003]");
+                    sbSql.AppendFormat(" ,[NQ004],[NQ005],[NQ006],[NQ007],[NQ008],[NQ009],[NQ010],[NQ011],[NQ012],[NQ013]");
+                    sbSql.AppendFormat(" ,[NQ014],[NQ015],[NQ016],[UDF01],[UDF02],[UDF03],[UDF04],[UDF05],[UDF06],[UDF07]");
+                    sbSql.AppendFormat(" ,[UDF08],[UDF09],[UDF10])");
+                    sbSql.AppendFormat(" VALUES('test','DS','DS','{0}','DS','{1}','2',convert(varchar, getdate(), 108),convert(varchar, getdate(), 108),'P001', ", DAYNO, DAYNO);
+                    sbSql.AppendFormat(" 'POSI14',NULL,NULL,NULL,0,NULL,'DS','{0}','{1}',NULL,", NP001, od["MI001"].ToString());
+                    sbSql.AppendFormat(" NULL,{0},NULL,'Y',NULL,NULL,NULL,NULL,NULL,0,", od["BOUNS"].ToString());
+                    sbSql.AppendFormat(" 0,0,NULL,NULL,NULL,NULL,NULL,NULL,0,0,");
+                    sbSql.AppendFormat(" 0,0,0)");
+                    sbSql.AppendFormat(" ");
+                }
+                    
+
+
+                cmd.Connection = sqlConn;
+                cmd.CommandTimeout = 60;
+                cmd.CommandText = sbSql.ToString();
+                cmd.Transaction = tran;
+                result = cmd.ExecuteNonQuery();
+
+                if (result == 0)
+                {
+                    tran.Rollback();    //交易取消
+                }
+                else
+                {
+                    tran.Commit();      //執行交易  
+
+
+                }
+
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
+
+        public string GETMAXTWSCNP(string DAYNO)
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dberp"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+                DataSet ds = new DataSet();
+                SqlDataAdapter adapter = new SqlDataAdapter();
+                SqlCommandBuilder sqlCmdBuilder = new SqlCommandBuilder();
+                StringBuilder sbSql = new StringBuilder();
+
+                string NP001;
+
+                sbSql.Clear();
+
+                ds.Clear();
+
+                sbSql.AppendFormat(@"   SELECT ISNULL(MAX(NP001),'00000000000') AS NP001");
+                sbSql.AppendFormat(@"  FROM [test].[dbo].[WSCNP] ");
+                sbSql.AppendFormat(@"  WHERE  NP001 LIKE '{0}%' ", DAYNO);
+                sbSql.AppendFormat(@"  ");
+                sbSql.AppendFormat(@"  ");
+
+                adapter = new SqlDataAdapter(@"" + sbSql, sqlConn);
+
+                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+                sqlConn.Open();
+                ds.Clear();
+                adapter.Fill(ds, "ds");
+                sqlConn.Close();
+
+
+                if (ds.Tables["ds"].Rows.Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    if (ds.Tables["ds"].Rows.Count >= 1)
+                    {
+                        NP001 = SETTNP001(DAYNO, ds.Tables["ds"].Rows[0]["NP001"].ToString());
+                        return NP001;
+
+                    }
+                    return null;
+                }
+
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                sqlConn.Close();
+            }
+
+            
+        }
+
+        public string SETTNP001(string DAYNO, string NP001)
+        {
+            if (NP001.Equals("00000000000"))
+            {
+                return DAYNO + "001";
+            }
+
+            else
+            {
+                int serno = Convert.ToInt16(NP001.Substring(8, 3));
+                serno = serno + 1;
+                string temp = serno.ToString();
+                temp = temp.PadLeft(3, '0');
+                return DAYNO + temp.ToString();
+            }
+        }
         public void INSERTLOGLOGWSCMISYNC(string message)
         {
             try
@@ -565,7 +762,8 @@ namespace TKWEBPOSSYNC
             //UPDATEMYSQLWSCMISYNC();
             //INSERTTOMSSQLWSCMI();
             //UPDATETOMSSQLWSCMI();
-            INSERTTOMYSQLWSCMIBOUNS();
+            //INSERTTOMYSQLWSCMIBOUNS();
+            INSERTTOMSSQLWSCMIBOUNS();
         }
         #endregion
 
