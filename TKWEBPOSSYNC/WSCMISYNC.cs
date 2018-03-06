@@ -585,8 +585,7 @@ namespace TKWEBPOSSYNC
                 else
                 {
                     tran.Commit();      //執行交易  
-
-
+                    UPDATEMYSQLWSCMIBOUNS();
                 }
 
             }
@@ -601,6 +600,29 @@ namespace TKWEBPOSSYNC
             }
         }
 
+        public void UPDATEMYSQLWSCMIBOUNS()
+        {
+            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+
+            MySqlConnection conn = new MySqlConnection(connString);
+            conn.Open();
+
+            MySqlCommand AddNewCmd;
+            StringBuilder AddNew = new StringBuilder();
+
+            foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
+            {
+                AddNew.AppendFormat(@" UPDATE NEWDB.WSCMIBOUNS SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}' ;" ,od["MI001"].ToString());
+                AddNew.AppendFormat(@" ");
+                AddNew.AppendFormat(@" ");
+
+            }
+
+            AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            AddNewCmd.Connection = conn;
+            //執行新增
+            AddNewCmd.ExecuteNonQuery();
+        }
         public string GETMAXTWSCNP(string DAYNO)
         {
             try
