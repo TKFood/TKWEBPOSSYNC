@@ -92,9 +92,10 @@ namespace TKWEBPOSSYNC
                 connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
                 sqlConn = new SqlConnection(connectionString);
 
+                sbSql.Clear();
                 sbSql.AppendFormat(@" SELECT [MI001],[EMAIL],[NAME],[PHONE],[ADDRESS],[TEL],CONVERT(varchar(100),[BIRTHDAY],111) AS BIRTHDAY,[PASSWORD],[SEX],[FORM],[STATUS] FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC]");
-                sbSql.AppendFormat(@" WHERE [STATUS]='N'");
-                sbSql.AppendFormat(@" AND [MI001] NOT IN (SELECT  [MI001] FROM  OPENQUERY(MYSQL, 'SELECT MI001 FROM NEWDB.WSCMI'))");
+                sbSql.AppendFormat(@" WHERE [STATUS]='N' AND FORM='POS'");
+                sbSql.AppendFormat(@" AND [MI001] NOT IN (SELECT  [MI001] FROM  OPENQUERY(MYSQL, 'SELECT MI001 FROM NEWDB.WSCMI WHERE FORM=''POS'''))  ");
                 sbSql.AppendFormat(@" ");
                 sbSql.AppendFormat(@" ");
 
@@ -166,8 +167,8 @@ namespace TKWEBPOSSYNC
                 sbSql.AppendFormat(@" SELECT  A.MI001, A.EMAIL, A.NAME, A.PHONE, A.ADDRESS, A.TEL, CONVERT(varchar(100),A.BIRTHDAY,111) AS BIRTHDAY, A.PASSWORD, A.SEX, A.FORM, A.STATUS ");
                 sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC] A ");
                 sbSql.AppendFormat(@" INNER JOIN OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') B  ");
-                sbSql.AppendFormat(@" ON A.MI001=B.MI001 AND (A.EMAIL<>B.EMAIL OR A.NAME<>B.NAME OR A.PHONE<>B.PHONE OR A.ADDRESS<>B.ADDRESS OR A.TEL<>B.TEL OR A.BIRTHDAY<>B.BIRTHDAY OR A.SEX<>B.SEX )");
-                sbSql.AppendFormat(@" AND A.STATUS='N'");
+                sbSql.AppendFormat(@" ON A.MI001=B.MI001 AND (A.EMAIL<>B.EMAIL OR A.NAME<>B.NAME OR A.PHONE<>B.PHONE OR A.ADDRESS<>B.ADDRESS OR A.TEL<>B.TEL OR A.BIRTHDAY<>B.BIRTHDAY OR A.SEX<>B.SEX OR A.FORM<>B.FORM )");
+                sbSql.AppendFormat(@" AND A.STATUS='N' AND A.FORM='POS'");
                 sbSql.AppendFormat(@" ");
                 sbSql.AppendFormat(@" ");
 
@@ -236,8 +237,9 @@ namespace TKWEBPOSSYNC
 
                 sbSql.Clear();
 
-                sbSql.AppendFormat(@" SELECT  * FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI')");
-                sbSql.AppendFormat(@" WHERE MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])");
+                sbSql.AppendFormat(@" SELECT  A.* FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI ') A");
+                sbSql.AppendFormat(@" WHERE A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI]) ");
+                sbSql.AppendFormat(@"  AND A.FORM='WEB'");
                 sbSql.AppendFormat(@" ");
 
                 adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
@@ -367,13 +369,13 @@ namespace TKWEBPOSSYNC
                 sbSql.AppendFormat(" WHERE [LOG_WSCMI].MI001 IN (SELECT A.MI001");
                 sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
                 sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
-                sbSql.AppendFormat(" WHERE A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010)");
+                sbSql.AppendFormat(" WHERE A.FORM='WEB' AND (A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010))");
                 sbSql.AppendFormat(" ");
                 sbSql.AppendFormat(" UPDATE [test].[dbo].[WSCMI]  ");
                 sbSql.AppendFormat(" SET MI031=A.EMAIL,MI002=A.NAME,MI029=A.PHONE,MI003=A.ADDRESS,MI004=A.TEL,MI005=convert(varchar, A.BIRTHDAY,112),MI010= A.SEX");
                 sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
                 sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
-                sbSql.AppendFormat(" WHERE A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010");
+                sbSql.AppendFormat(" WHERE A.FORM='WEB' AND (A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010)");
                 sbSql.AppendFormat(" ");
 
 
