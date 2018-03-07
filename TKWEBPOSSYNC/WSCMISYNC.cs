@@ -35,6 +35,7 @@ namespace TKWEBPOSSYNC
         DataSet dsMSSQLWSCMI = new DataSet();
         DataSet dsMYSQLWSCMIBOUNS = new DataSet();
         DataSet dsMSSQLWSCMIBOUNS = new DataSet();
+        
 
         int result;
 
@@ -47,9 +48,11 @@ namespace TKWEBPOSSYNC
 
         private void WSCMISYNC_Load(object sender, EventArgs e)
         {
-            timer1.Interval = 1000; // 設定每秒觸發一次
+            timer1.Interval = 1000*60; // 設定每秒觸發一次*60
             //timer1.Interval = 1000 * 60; // 設定每分觸發一次
             timer1.Enabled = true; // 啟動 Timer
+
+           
         }
 
         #region
@@ -62,9 +65,23 @@ namespace TKWEBPOSSYNC
             if(SYNC.Equals("Y"))
             {
                 label4.Text = DateTime.Now.ToString("yyyy/MM/dd hh:mm:ss");
-             
+
+                //執行順序不可改，會造成點數重覆寫到WEB、POS
+                INSERTTOMSSQLWSCMI();
+                UPDATETOMSSQLWSCMI();
+
+                INSERTTOMSSQLWSCMIBOUNS();
+                INSERTTOMYSQLWSCMIBOUNS();
+
+                INSERTTOMYSQLWSCMISYNC();
+                UPDATEMYSQLWSCMISYNC();
             }
 
+
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
 
         }
 
@@ -99,11 +116,12 @@ namespace TKWEBPOSSYNC
                 else if (dsMYSQLWSCMISYNC.Tables["MYSQLWSCMISYNC"].Rows.Count >= 1)
                 {
                     ADDTOMYSQLWSCMISYNC();
+                    INSERTLOGLOGWSCMISYNC("ADDTOMYSQLWSCMISYNC","RUN");
                 }
             }
             catch
             {
-
+                INSERTLOGLOGWSCMISYNC("ADDTOMYSQLWSCMISYNC", "FAIL");
             }
 
             finally
@@ -133,6 +151,7 @@ namespace TKWEBPOSSYNC
             AddNewCmd.Connection = conn;
             //執行新增
             AddNewCmd.ExecuteNonQuery();
+
         }
 
 
@@ -143,6 +162,7 @@ namespace TKWEBPOSSYNC
                 connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
                 sqlConn = new SqlConnection(connectionString);
 
+                sbSql.Clear();
                 sbSql.AppendFormat(@" SELECT  A.MI001, A.EMAIL, A.NAME, A.PHONE, A.ADDRESS, A.TEL, CONVERT(varchar(100),A.BIRTHDAY,111) AS BIRTHDAY, A.PASSWORD, A.SEX, A.FORM, A.STATUS ");
                 sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC] A ");
                 sbSql.AppendFormat(@" INNER JOIN OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') B  ");
@@ -169,11 +189,12 @@ namespace TKWEBPOSSYNC
                 else if (dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows.Count >= 1)
                 {
                     UPDATETOMYSQLWSCMISYNC();
+                    INSERTLOGLOGWSCMISYNC("UPDATETOMYSQLWSCMISYNC", "RUN");
                 }
             }
             catch
             {
-
+                INSERTLOGLOGWSCMISYNC("UPDATETOMYSQLWSCMISYNC", "FAIL");
             }
 
             finally
@@ -194,7 +215,7 @@ namespace TKWEBPOSSYNC
 
             foreach (DataRow od in dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows)
             {
-                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE MI001='{0}' ", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
+                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE MI001='{0}' ;", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
                 UPDATENew.AppendFormat(@" ");
 
             }
@@ -237,11 +258,12 @@ namespace TKWEBPOSSYNC
                 else if (dsMSSQLWSCMI.Tables["MSSQLWSCMI"].Rows.Count >= 1)
                 {
                     ADDTOMSSQLQSCMI();
+                    INSERTLOGLOGWSCMISYNC("ADDTOMSSQLQSCMI", "RUN");
                 }
             }
             catch
             {
-
+                INSERTLOGLOGWSCMISYNC("ADDTOMSSQLQSCMI", "FAIL");
             }
 
             finally
@@ -368,14 +390,13 @@ namespace TKWEBPOSSYNC
                 else
                 {
                     tran.Commit();      //執行交易  
-
-
+                    INSERTLOGLOGWSCMISYNC("UPDATETOMSSQLWSCMI", "RUN");
                 }
 
             }
             catch
             {
-
+                INSERTLOGLOGWSCMISYNC("UPDATETOMSSQLWSCMI", "FAIL");
             }
 
             finally
@@ -417,11 +438,13 @@ namespace TKWEBPOSSYNC
                 else if (dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows.Count >= 1)
                 {
                     ADDTOMYSQLWSCMIBOUNS();
+                    UPDATEMSSQLWSCMIBOUNS();
+                    INSERTLOGWSCMIBOUNS("ADDTOMYSQLWSCMIBOUNS","RUN");
                 }
             }
             catch
             {
-
+                INSERTLOGWSCMIBOUNS("ADDTOMYSQLWSCMIBOUNS", "FAIL");
             }
 
             finally
@@ -454,6 +477,59 @@ namespace TKWEBPOSSYNC
             AddNewCmd.ExecuteNonQuery();
         }
 
+        public void UPDATEMSSQLWSCMIBOUNS()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sqlConn.Close();
+                sqlConn.Open();
+                tran = sqlConn.BeginTransaction();
+
+                sbSql.Clear();
+
+                foreach (DataRow od in dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows)
+                {                   
+                    sbSql.AppendFormat(" UPDATE [TKWEBPOSSYNC].[dbo].[WSCMIBOUNS]");
+                    sbSql.AppendFormat(" SET [STATUS]='Y'");
+                    sbSql.AppendFormat(" WHERE [ID]='{0}'", od["ID"].ToString());
+                    sbSql.AppendFormat(" ");
+                }
+
+
+               
+                sbSql.AppendFormat(" ");
+
+
+                cmd.Connection = sqlConn;
+                cmd.CommandTimeout = 60;
+                cmd.CommandText = sbSql.ToString();
+                cmd.Transaction = tran;
+                result = cmd.ExecuteNonQuery();
+
+                if (result == 0)
+                {
+                    tran.Rollback();    //交易取消
+                }
+                else
+                {
+                    tran.Commit();      //執行交易  
+                    UPDATEMYSQLWSCMIBOUNS();
+                }
+
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
         public void INSERTTOMSSQLWSCMIBOUNS()
         {
             try
@@ -486,12 +562,13 @@ namespace TKWEBPOSSYNC
                 }
                 else if (dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows.Count >= 1)
                 {
-                    ADDTOMSSQLWSCMI();
+                    ADDTOMSSQLWSCMI();                    
+                    INSERTLOGWSCMIBOUNS("ADDTOMSSQLWSCMI", "RUN");
                 }
             }
             catch
             {
-
+                INSERTLOGWSCMIBOUNS("ADDTOMSSQLWSCMI", "FAIL");
             }
 
             finally
@@ -585,6 +662,7 @@ namespace TKWEBPOSSYNC
                 else
                 {
                     tran.Commit();      //執行交易  
+                    DELWSCMIBOUNS(); //因為TRIIGER會在WEB修改點數到POS時，又產生資料從POS到WEB，故刪除 
                     UPDATEMYSQLWSCMIBOUNS();
                 }
 
@@ -600,6 +678,58 @@ namespace TKWEBPOSSYNC
             }
         }
 
+        public void DELWSCMIBOUNS()
+        {
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sqlConn.Close();
+                sqlConn.Open();
+                tran = sqlConn.BeginTransaction();
+
+                sbSql.Clear();
+
+                foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
+                {
+                    sbSql.AppendFormat(" DELETE [TKWEBPOSSYNC].[dbo].[WSCMIBOUNS]");
+                    sbSql.AppendFormat(" WHERE [STATUS]='N' AND [MI001]='{0}' AND ([MI037NEW]-[MI037OLD])='{1}';", od["MI001"].ToString(), od["BOUNS"].ToString());
+                    sbSql.AppendFormat(" ");
+                }
+
+
+
+                sbSql.AppendFormat(" ");
+
+
+                cmd.Connection = sqlConn;
+                cmd.CommandTimeout = 60;
+                cmd.CommandText = sbSql.ToString();
+                cmd.Transaction = tran;
+                result = cmd.ExecuteNonQuery();
+
+                if (result == 0)
+                {
+                    tran.Rollback();    //交易取消
+                }
+                else
+                {
+                    tran.Commit();      //執行交易  
+                    UPDATEMYSQLWSCMIBOUNS();
+                }
+
+            }
+            catch
+            {
+
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+        }
         public void UPDATEMYSQLWSCMIBOUNS()
         {
             string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
@@ -699,7 +829,7 @@ namespace TKWEBPOSSYNC
                 return DAYNO + temp.ToString();
             }
         }
-        public void INSERTLOGLOGWSCMISYNC(string message)
+        public void INSERTLOGLOGWSCMISYNC(string PROG, string message)
         {
             try
             {
@@ -712,8 +842,8 @@ namespace TKWEBPOSSYNC
 
                 sbSql.Clear();
                 sbSql.AppendFormat(" INSERT [TKWEBPOSSYNC].[dbo].[LOGWSCMISYNC]");
-                sbSql.AppendFormat(" ([EXECTIME],[STATUS])");
-                sbSql.AppendFormat("  VALUES ('{0}','{1}')", label4.Text, message);
+                sbSql.AppendFormat(" ([PROG],[EXECTIME],[STATUS])");
+                sbSql.AppendFormat("  VALUES ('{0}','{1}','{2}')", PROG, DateTime.Now.ToString("yyyy/MM/dd hh:mm:dd"), message);
                 sbSql.AppendFormat(" ");
                 sbSql.AppendFormat(" ");
 
@@ -743,7 +873,7 @@ namespace TKWEBPOSSYNC
                 sqlConn.Close();
             }
         }
-        public void INSERTLOGWSCMIBOUNS(string message)
+        public void INSERTLOGWSCMIBOUNS(string PROG,string message)
         {
             try
             {
@@ -756,8 +886,8 @@ namespace TKWEBPOSSYNC
 
                 sbSql.Clear();
                 sbSql.AppendFormat(" INSERT [TKWEBPOSSYNC].[dbo].[LOGWSCMIBOUNS]");
-                sbSql.AppendFormat(" ([EXECTIME],[STATUS])");
-                sbSql.AppendFormat("  VALUES ('{0}','{1}')",label4.Text, message);
+                sbSql.AppendFormat(" ([PROG],[EXECTIME],[STATUS])");
+                sbSql.AppendFormat("  VALUES ('{0}','{1}','{2}')", PROG, DateTime.Now.ToString("yyyy/MM/dd hh:mm:dd"), message);
                 sbSql.AppendFormat(" ");
                 sbSql.AppendFormat(" ");
 
@@ -787,35 +917,43 @@ namespace TKWEBPOSSYNC
                 sqlConn.Close();
             }
         }
-        private void button1_Click(object sender, EventArgs e)
-        {
-            if(button1.Text.Equals("啟動"))
-            {
-                button1.Text = "停止";
-                SYNC = "Y";
-            }
-            else
-            {
-                button1.Text = "啟動";
-                SYNC = "N";
-            }
-        }
+
 
         #endregion
 
 
         #region
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (button1.Text.Equals("啟動"))
+            {
+                button1.Text = "停止";
+                label1.Text = "RUNNING";
+                SYNC = "Y";
+            }
+            else
+            {
+                button1.Text = "啟動";
+                label1.Text = "STOP ";
+                SYNC = "N";
+            }
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
-            //INSERTTOMYSQLWSCMISYNC();
-            //UPDATEMYSQLWSCMISYNC();
-            //INSERTTOMSSQLWSCMI();
-            //UPDATETOMSSQLWSCMI();
-            //INSERTTOMYSQLWSCMIBOUNS();
+            //執行順序不可改，會造成點數重覆寫到WEB、POS
+            INSERTTOMSSQLWSCMI();
+            UPDATETOMSSQLWSCMI();
+           
             INSERTTOMSSQLWSCMIBOUNS();
+            INSERTTOMYSQLWSCMIBOUNS();
+
+            INSERTTOMYSQLWSCMISYNC();
+            UPDATEMYSQLWSCMISYNC();
         }
+
         #endregion
 
-
+        
     }
 }
