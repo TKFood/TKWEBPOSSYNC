@@ -35,7 +35,8 @@ namespace TKWEBPOSSYNC
         DataSet dsMSSQLWSCMI = new DataSet();
         DataSet dsMYSQLWSCMIBOUNS = new DataSet();
         DataSet dsMSSQLWSCMIBOUNS = new DataSet();
-        
+        DataSet dsMSSQLWSCMISTATUS = new DataSet();
+
 
         int result;
 
@@ -164,11 +165,10 @@ namespace TKWEBPOSSYNC
                 sqlConn = new SqlConnection(connectionString);
 
                 sbSql.Clear();
-                sbSql.AppendFormat(@" SELECT  A.MI001, A.EMAIL, A.NAME, A.PHONE, A.ADDRESS, A.TEL, CONVERT(varchar(100),A.BIRTHDAY,111) AS BIRTHDAY, A.PASSWORD, A.SEX, A.FORM, A.STATUS ");
-                sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC] A ");
-                sbSql.AppendFormat(@" INNER JOIN OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') B  ");
-                sbSql.AppendFormat(@" ON A.MI001=B.MI001 AND (A.EMAIL<>B.EMAIL OR A.NAME<>B.NAME OR A.PHONE<>B.PHONE OR A.ADDRESS<>B.ADDRESS OR A.TEL<>B.TEL OR A.BIRTHDAY<>B.BIRTHDAY OR A.SEX<>B.SEX OR A.FORM<>B.FORM )");
-                sbSql.AppendFormat(@" AND A.STATUS='N' AND A.FORM='POS'");
+                sbSql.AppendFormat(@" SELECT  A.MI001, A.EMAIL, A.NAME, A.PHONE, A.ADDRESS, A.TEL, CONVERT(varchar(100),A.BIRTHDAY,111) AS BIRTHDAY, A.PASSWORD, A.SEX, A.FORM, A.STATUS  ");
+                sbSql.AppendFormat(@" FROM [TKWEBPOSSYNC].[dbo].[WSCMISYNC] A  ,OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') B   ");
+                sbSql.AppendFormat(@" WHERE B.FORM='POS' AND A.MI001=B.MI001 AND (ISNULL(A.EMAIL,'')<>ISNULL(B.EMAIL,'') OR ISNULL(A.NAME,'')<>ISNULL(B.NAME,'') OR ISNULL(A.PHONE,'')<>ISNULL(B.PHONE,'') OR ISNULL(A.ADDRESS,'')<>ISNULL(B.ADDRESS,'') OR ISNULL(A.TEL,'')<>ISNULL(B.TEL,'') OR ISNULL(A.BIRTHDAY,'')<>ISNULL(B.BIRTHDAY,'') OR ISNULL(A.SEX,'')<>ISNULL(B.SEX,'') OR ISNULL(A.FORM,'')<>ISNULL(B.FORM,'') ) ");
+                sbSql.AppendFormat(@" AND A.STATUS='N' AND A.FORM='POS' ");
                 sbSql.AppendFormat(@" ");
                 sbSql.AppendFormat(@" ");
 
@@ -216,7 +216,7 @@ namespace TKWEBPOSSYNC
 
             foreach (DataRow od in dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows)
             {
-                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE MI001='{0}' ;", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
+                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE FORM='POS' AND  MI001='{0}'  ;", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
                 UPDATENew.AppendFormat(@" ");
 
             }
@@ -239,7 +239,7 @@ namespace TKWEBPOSSYNC
 
                 sbSql.AppendFormat(@" SELECT  A.* FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI ') A");
                 sbSql.AppendFormat(@" WHERE A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI]) ");
-                sbSql.AppendFormat(@"  AND A.FORM='WEB'");
+                sbSql.AppendFormat(@"  AND A.FORM='WEB' AND A.STATUS='N'");
                 sbSql.AppendFormat(@" ");
 
                 adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
@@ -292,7 +292,7 @@ namespace TKWEBPOSSYNC
                 sbSql.AppendFormat(" ,PI010 AS [store_ip]");
                 sbSql.AppendFormat(" ,NULL AS [sync_date],NULL AS [sync_time],'N' AS [sync_mark],'0' AS [sync_count],TEMP.MI001 AS [MI001]");
                 sbSql.AppendFormat(" FROM (SELECT MI001 FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
-                sbSql.AppendFormat(" WHERE A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])) AS TEMP, [test].[dbo].[POSPI]");
+                sbSql.AppendFormat(" WHERE A.FORM='WEB' AND A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])) AS TEMP, [test].[dbo].[POSPI]");
                 sbSql.AppendFormat(" ");
                 sbSql.AppendFormat(" INSERT INTO [test].[dbo].[WSCMI]");
                 sbSql.AppendFormat(" ([COMPANY],[CREATOR],[USR_GROUP],[CREATE_DATE],[MODIFIER],[MODI_DATE],[FLAG],[CREATE_TIME],[MODI_TIME],[TRANS_TYPE]");
@@ -320,6 +320,7 @@ namespace TKWEBPOSSYNC
                 sbSql.AppendFormat(" ,0 AS [UDF09],0 AS [UDF10]");
                 sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
                 sbSql.AppendFormat(" WHERE A.MI001 NOT IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])");
+                sbSql.AppendFormat(" AND A.FORM='WEB' AND A.STATUS='N'");
                 sbSql.AppendFormat(" ");
 
 
@@ -336,7 +337,7 @@ namespace TKWEBPOSSYNC
                 else
                 {
                     tran.Commit();      //執行交易  
-
+                    //UPDATEWSCMISTATUS(); //在update後再更新mssyl的status
 
                 }
 
@@ -352,6 +353,7 @@ namespace TKWEBPOSSYNC
             }
         }
 
+      
         public void UPDATETOMSSQLWSCMI()
         {
             try
@@ -364,20 +366,16 @@ namespace TKWEBPOSSYNC
                 tran = sqlConn.BeginTransaction();
 
                 sbSql.Clear();
-                sbSql.AppendFormat(" UPDATE [test].[dbo].[LOG_WSCMI]");
-                sbSql.AppendFormat(" SET [sync_mark]='N'");
-                sbSql.AppendFormat(" WHERE [LOG_WSCMI].MI001 IN (SELECT A.MI001");
-                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
-                sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
-                sbSql.AppendFormat(" WHERE A.FORM='WEB' AND (A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010))");
+                sbSql.AppendFormat(" UPDATE [test].[dbo].[LOG_WSCMI] SET [sync_mark]='N' ");
+                sbSql.AppendFormat(" WHERE [LOG_WSCMI].MI001 IN  (SELECT A.MI001 FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A,[test].[dbo].[WSCMI] B ");
+                sbSql.AppendFormat(" WHERE  A.FORM='WEB' AND STATUS='N' AND A.MI001=B.MI001");
+                sbSql.AppendFormat(" AND ((ISNULL(A.EMAIL,'')<>ISNULL(B.MI031,''))  OR ISNULL(A.NAME,'')<>ISNULL(B.MI002,'') OR ISNULL(A.PHONE,'')<>ISNULL(B.MI029,'')  OR ISNULL(A.ADDRESS,'')<>ISNULL(B.MI003,'') OR ISNULL(A.TEL,'')<>ISNULL(B.MI004,'') OR ISNULL(convert(varchar, A.BIRTHDAY, 112),'')<>ISNULL(B.MI005,'') OR ISNULL(A.SEX,'') <>ISNULL(B.MI010,'')) )");
                 sbSql.AppendFormat(" ");
-                sbSql.AppendFormat(" UPDATE [test].[dbo].[WSCMI]  ");
-                sbSql.AppendFormat(" SET MI031=A.EMAIL,MI002=A.NAME,MI029=A.PHONE,MI003=A.ADDRESS,MI004=A.TEL,MI005=convert(varchar, A.BIRTHDAY,112),MI010= A.SEX");
-                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
-                sbSql.AppendFormat(" INNER JOIN [test].[dbo].[WSCMI] B ON A.MI001=B.MI001");
-                sbSql.AppendFormat(" WHERE A.FORM='WEB' AND (A.EMAIL<>B.MI031 OR A.NAME<>B.MI002 OR A.PHONE<>B.MI029 OR A.ADDRESS<>B.MI003 OR A.TEL<>B.MI004 OR convert(varchar, A.BIRTHDAY, 112)<>B.MI005 OR A.SEX <>B.MI010)");
+                sbSql.AppendFormat(" UPDATE [test].[dbo].[WSCMI]   SET MI031=A.EMAIL,MI002=A.NAME,MI029=A.PHONE,MI003=A.ADDRESS,MI004=A.TEL,MI005=convert(varchar, A.BIRTHDAY,112),MI010= A.SEX ");
+                sbSql.AppendFormat(" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A ,[test].[dbo].[WSCMI] B ");
+                sbSql.AppendFormat(" WHERE  A.FORM='WEB' AND STATUS='N' AND A.MI001=B.MI001");
+                sbSql.AppendFormat(" AND ((ISNULL(A.EMAIL,'')<>ISNULL(B.MI031,''))  OR ISNULL(A.NAME,'')<>ISNULL(B.MI002,'') OR ISNULL(A.PHONE,'')<>ISNULL(B.MI029,'')  OR ISNULL(A.ADDRESS,'')<>ISNULL(B.MI003,'') OR ISNULL(A.TEL,'')<>ISNULL(B.MI004,'') OR ISNULL(convert(varchar, A.BIRTHDAY, 112),'')<>ISNULL(B.MI005,'') OR ISNULL(A.SEX,'') <>ISNULL(B.MI010,'')) ");
                 sbSql.AppendFormat(" ");
-
 
                 cmd.Connection = sqlConn;
                 cmd.CommandTimeout = 60;
@@ -393,6 +391,7 @@ namespace TKWEBPOSSYNC
                 {
                     tran.Commit();      //執行交易  
                     INSERTLOGLOGWSCMISYNC("UPDATETOMSSQLWSCMI", "RUN");
+                    //UPDATEWSCMISTATUS(); //在update後再更新mssyl的status
                 }
 
             }
@@ -405,6 +404,74 @@ namespace TKWEBPOSSYNC
             {
                 sqlConn.Close();
             }
+        }
+
+        public void UPDATEWSCMISTATUS()
+        {
+
+            try
+            {
+                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+                sqlConn = new SqlConnection(connectionString);
+
+                sbSql.Clear();
+
+                sbSql.AppendFormat(@" SELECT A.MI001,A.FORM");
+                sbSql.AppendFormat(@" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
+                sbSql.AppendFormat(@" WHERE A.MI001 IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])");
+                sbSql.AppendFormat(@" AND A.FORM='WEB' AND A.STATUS='N' ");
+                sbSql.AppendFormat(@" ");
+
+                adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
+                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+
+                sqlConn.Open();
+                dsMSSQLWSCMISTATUS.Clear();
+                //dataGridView1.Columns.Clear();
+
+
+                adapter.Fill(dsMSSQLWSCMISTATUS, "MSSQLWSCMISTATUS");
+                sqlConn.Close();
+
+                if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count == 0)
+                {
+
+                }
+                else if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count >= 1)
+                {
+                    string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+
+                    MySqlConnection conn = new MySqlConnection(connString);
+                    conn.Open();
+
+                    MySqlCommand AddNewCmd;
+                    StringBuilder AddNew = new StringBuilder();
+
+                    foreach (DataRow od in dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows)
+                    {
+                        AddNew.AppendFormat(@" ");
+                        AddNew.AppendFormat(@" UPDATE NEWDB.WSCMI SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}'; ",  od["MI001"].ToString());
+                        AddNew.AppendFormat(@" ");
+
+                    }
+
+                    AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+                    AddNewCmd.Connection = conn;
+                    //執行新增
+                    AddNewCmd.ExecuteNonQuery();
+                }
+            }
+            catch
+            {
+                
+            }
+
+            finally
+            {
+                sqlConn.Close();
+            }
+
+            
         }
 
         public void INSERTTOMYSQLWSCMIBOUNS()
@@ -947,11 +1014,14 @@ namespace TKWEBPOSSYNC
             INSERTTOMSSQLWSCMI();
             UPDATETOMSSQLWSCMI();
            
+
             INSERTTOMSSQLWSCMIBOUNS();
             INSERTTOMYSQLWSCMIBOUNS();
 
             INSERTTOMYSQLWSCMISYNC();
             UPDATEMYSQLWSCMISYNC();
+
+            UPDATEWSCMISTATUS(); //在update後再更新mssyl的status
         }
 
         #endregion
