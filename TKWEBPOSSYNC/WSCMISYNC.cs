@@ -1013,7 +1013,7 @@ namespace TKWEBPOSSYNC
             //執行順序不可改，會造成點數重覆寫到WEB、POS
             INSERTTOMSSQLWSCMI();
             UPDATETOMSSQLWSCMI();
-           
+
 
             INSERTTOMSSQLWSCMIBOUNS();
             INSERTTOMYSQLWSCMIBOUNS();
@@ -1022,6 +1022,8 @@ namespace TKWEBPOSSYNC
             UPDATEMYSQLWSCMISYNC();
 
             UPDATEWSCMISTATUS(); //在update後再更新mssyl的status
+
+            MessageBox.Show("OK");
         }
 
         #endregion
