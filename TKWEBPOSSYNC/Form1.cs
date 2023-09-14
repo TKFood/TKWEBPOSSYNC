@@ -13,8 +13,7 @@ using System.Configuration;
 using System.Reflection;
 using System.Threading;
 using System.Globalization;
-using MySql.Data;
-using MySql.Data.MySqlClient;
+
 
 namespace TKWEBPOSSYNC
 {
@@ -43,32 +42,32 @@ namespace TKWEBPOSSYNC
         #region FUNCTION
         public void SEARCHMYSQL()
         {
-            //string dbHost = "";//資料庫位址
-            //string dbUser = "";//資料庫使用者帳號
-            //string dbPass = "";//資料庫使用者密碼
-            //string dbName = "";//資料庫名稱
-            //string connStr = "server=" + dbHost + ";uid=" + dbUser + ";pwd=" + dbPass + ";database=" + dbName;
-            //string connStr = "server=192.168.1.170;uid=tk;pwd=Tk2vjx;database=NEWDB";
+            ////string dbHost = "";//資料庫位址
+            ////string dbUser = "";//資料庫使用者帳號
+            ////string dbPass = "";//資料庫使用者密碼
+            ////string dbName = "";//資料庫名稱
+            ////string connStr = "server=" + dbHost + ";uid=" + dbUser + ";pwd=" + dbPass + ";database=" + dbName;
+            ////string connStr = "server=192.168.1.170;uid=tk;pwd=Tk2vjx;database=NEWDB";
 
-            string connStr = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //string connStr = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
            
 
-            MySqlConnection conn = new MySqlConnection(connStr);
-            MySqlCommand command = conn.CreateCommand();
-            conn.Open();
+            //MySqlConnection conn = new MySqlConnection(connStr);
+            //MySqlCommand command = conn.CreateCommand();
+            //conn.Open();
     
-            MySqlDataAdapter MyDA = new MySqlDataAdapter();
-            string sqlSelectAll = "SELECT NAME,EMAIL FROM NEWDB.NEWTB";
-            MyDA.SelectCommand = new MySqlCommand(sqlSelectAll, conn);
+            //MySqlDataAdapter MyDA = new MySqlDataAdapter();
+            //string sqlSelectAll = "SELECT NAME,EMAIL FROM NEWDB.NEWTB";
+            //MyDA.SelectCommand = new MySqlCommand(sqlSelectAll, conn);
 
-            table.Clear();
-            MyDA.Fill(table);
+            //table.Clear();
+            //MyDA.Fill(table);
 
-            BindingSource bSource = new BindingSource();
-            bSource.DataSource = table;
+            //BindingSource bSource = new BindingSource();
+            //bSource.DataSource = table;
 
-            dataGridView1.DataSource = bSource;
-            conn.Close();
+            //dataGridView1.DataSource = bSource;
+            //conn.Close();
 
         }
 

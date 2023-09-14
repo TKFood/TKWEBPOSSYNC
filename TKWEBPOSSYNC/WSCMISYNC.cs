@@ -13,8 +13,7 @@ using System.Configuration;
 using System.Reflection;
 using System.Threading;
 using System.Globalization;
-using MySql.Data;
-using MySql.Data.MySqlClient;
+
 
 namespace TKWEBPOSSYNC
 {
@@ -134,25 +133,25 @@ namespace TKWEBPOSSYNC
 
         public void ADDTOMYSQLWSCMISYNC()
         {
-            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
 
-            MySqlConnection conn = new MySqlConnection(connString);
-            conn.Open();
+            //MySqlConnection conn = new MySqlConnection(connString);
+            //conn.Open();
 
-            MySqlCommand AddNewCmd;
-            StringBuilder AddNew = new StringBuilder();
+            //MySqlCommand AddNewCmd;
+            //StringBuilder AddNew = new StringBuilder();
 
-            foreach (DataRow od in dsMYSQLWSCMISYNC.Tables["MYSQLWSCMISYNC"].Rows)
-            {
-                AddNew.AppendFormat(@" INSERT INTO NEWDB.WSCMI(MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS,CREATE_DATE,MODI_DATE) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}'); ", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString(), od["FORM"].ToString(), od["STATUS"].ToString(), od["CREATE_DATE"].ToString(), od["MODI_DATE"].ToString());
-                AddNew.AppendFormat(@" ");
+            //foreach (DataRow od in dsMYSQLWSCMISYNC.Tables["MYSQLWSCMISYNC"].Rows)
+            //{
+            //    AddNew.AppendFormat(@" INSERT INTO NEWDB.WSCMI(MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS,CREATE_DATE,MODI_DATE) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}'); ", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString(), od["FORM"].ToString(), od["STATUS"].ToString(), od["CREATE_DATE"].ToString(), od["MODI_DATE"].ToString());
+            //    AddNew.AppendFormat(@" ");
 
-            }
+            //}
 
-            AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
-            AddNewCmd.Connection = conn;
-            //執行新增
-            AddNewCmd.ExecuteNonQuery();
+            //AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            //AddNewCmd.Connection = conn;
+            ////執行新增
+            //AddNewCmd.ExecuteNonQuery();
 
         }
 
@@ -206,25 +205,25 @@ namespace TKWEBPOSSYNC
 
         public void UPDATETOMYSQLWSCMISYNC()
         {
-            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
 
-            MySqlConnection conn = new MySqlConnection(connString);
-            conn.Open();
+            //MySqlConnection conn = new MySqlConnection(connString);
+            //conn.Open();
 
-            MySqlCommand UPDATENewCmd;
-            StringBuilder UPDATENew = new StringBuilder();
+            //MySqlCommand UPDATENewCmd;
+            //StringBuilder UPDATENew = new StringBuilder();
 
-            foreach (DataRow od in dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows)
-            {
-                UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE FORM='POS' AND  MI001='{0}'  ;", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
-                UPDATENew.AppendFormat(@" ");
+            //foreach (DataRow od in dsMYSQLWSCMISYNCUPDATE.Tables["MYSQLWSCMISYNCUPDATE"].Rows)
+            //{
+            //    UPDATENew.AppendFormat(@" UPDATE NEWDB.WSCMI SET EMAIL='{1}',NAME='{2}',PHONE='{3}',ADDRESS='{4}',TEL='{5}',BIRTHDAY='{6}',PASSWORD='{7}',SEX='{8}' WHERE FORM='POS' AND  MI001='{0}'  ;", od["MI001"].ToString(), od["EMAIL"].ToString(), od["NAME"].ToString(), od["PHONE"].ToString(), od["ADDRESS"].ToString(), od["TEL"].ToString(), od["BIRTHDAY"].ToString(), od["PASSWORD"].ToString(), od["SEX"].ToString());
+            //    UPDATENew.AppendFormat(@" ");
 
-            }
+            //}
 
-            UPDATENewCmd = new MySqlCommand(UPDATENew.ToString(), conn);
-            UPDATENewCmd.Connection = conn;
-            //執行新增
-            UPDATENewCmd.ExecuteNonQuery();
+            //UPDATENewCmd = new MySqlCommand(UPDATENew.ToString(), conn);
+            //UPDATENewCmd.Connection = conn;
+            ////執行新增
+            //UPDATENewCmd.ExecuteNonQuery();
         }
 
 
@@ -409,67 +408,67 @@ namespace TKWEBPOSSYNC
         public void UPDATEWSCMISTATUS()
         {
 
-            try
-            {
-                connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
-                sqlConn = new SqlConnection(connectionString);
+            //try
+            //{
+            //    connectionString = ConfigurationManager.ConnectionStrings["dbconn"].ConnectionString;
+            //    sqlConn = new SqlConnection(connectionString);
 
-                sbSql.Clear();
+            //    sbSql.Clear();
 
-                sbSql.AppendFormat(@" SELECT A.MI001,A.FORM");
-                sbSql.AppendFormat(@" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
-                sbSql.AppendFormat(@" WHERE A.MI001 IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])");
-                sbSql.AppendFormat(@" AND A.FORM='WEB' AND A.STATUS='N' ");
-                sbSql.AppendFormat(@" ");
+            //    sbSql.AppendFormat(@" SELECT A.MI001,A.FORM");
+            //    sbSql.AppendFormat(@" FROM  OPENQUERY(MYSQL, 'SELECT MI001,EMAIL,NAME,PHONE,ADDRESS,TEL,BIRTHDAY,PASSWORD,SEX,FORM,STATUS FROM NEWDB.WSCMI') A");
+            //    sbSql.AppendFormat(@" WHERE A.MI001 IN (SELECT [MI001] FROM [test].[dbo].[WSCMI])");
+            //    sbSql.AppendFormat(@" AND A.FORM='WEB' AND A.STATUS='N' ");
+            //    sbSql.AppendFormat(@" ");
 
-                adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
-                sqlCmdBuilder = new SqlCommandBuilder(adapter);
+            //    adapter = new SqlDataAdapter(sbSql.ToString(), sqlConn);
+            //    sqlCmdBuilder = new SqlCommandBuilder(adapter);
 
-                sqlConn.Open();
-                dsMSSQLWSCMISTATUS.Clear();
-                //dataGridView1.Columns.Clear();
+            //    sqlConn.Open();
+            //    dsMSSQLWSCMISTATUS.Clear();
+            //    //dataGridView1.Columns.Clear();
 
 
-                adapter.Fill(dsMSSQLWSCMISTATUS, "MSSQLWSCMISTATUS");
-                sqlConn.Close();
+            //    adapter.Fill(dsMSSQLWSCMISTATUS, "MSSQLWSCMISTATUS");
+            //    sqlConn.Close();
 
-                if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count == 0)
-                {
+            //    if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count == 0)
+            //    {
 
-                }
-                else if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count >= 1)
-                {
-                    string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //    }
+            //    else if (dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows.Count >= 1)
+            //    {
+            //        string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
 
-                    MySqlConnection conn = new MySqlConnection(connString);
-                    conn.Open();
+            //        MySqlConnection conn = new MySqlConnection(connString);
+            //        conn.Open();
 
-                    MySqlCommand AddNewCmd;
-                    StringBuilder AddNew = new StringBuilder();
+            //        MySqlCommand AddNewCmd;
+            //        StringBuilder AddNew = new StringBuilder();
 
-                    foreach (DataRow od in dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows)
-                    {
-                        AddNew.AppendFormat(@" ");
-                        AddNew.AppendFormat(@" UPDATE NEWDB.WSCMI SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}'; ",  od["MI001"].ToString());
-                        AddNew.AppendFormat(@" ");
+            //        foreach (DataRow od in dsMSSQLWSCMISTATUS.Tables["MSSQLWSCMISTATUS"].Rows)
+            //        {
+            //            AddNew.AppendFormat(@" ");
+            //            AddNew.AppendFormat(@" UPDATE NEWDB.WSCMI SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}'; ",  od["MI001"].ToString());
+            //            AddNew.AppendFormat(@" ");
 
-                    }
+            //        }
 
-                    AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
-                    AddNewCmd.Connection = conn;
-                    //執行新增
-                    AddNewCmd.ExecuteNonQuery();
-                }
-            }
-            catch
-            {
+            //        AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            //        AddNewCmd.Connection = conn;
+            //        //執行新增
+            //        AddNewCmd.ExecuteNonQuery();
+            //    }
+            //}
+            //catch
+            //{
                 
-            }
+            //}
 
-            finally
-            {
-                sqlConn.Close();
-            }
+            //finally
+            //{
+            //    sqlConn.Close();
+            //}
 
             
         }
@@ -524,26 +523,26 @@ namespace TKWEBPOSSYNC
 
         public void ADDTOMYSQLWSCMIBOUNS()
         {
-            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
 
-            MySqlConnection conn = new MySqlConnection(connString);
-            conn.Open();
+            //MySqlConnection conn = new MySqlConnection(connString);
+            //conn.Open();
 
-            MySqlCommand AddNewCmd;
-            StringBuilder AddNew = new StringBuilder();
+            //MySqlCommand AddNewCmd;
+            //StringBuilder AddNew = new StringBuilder();
 
-            foreach (DataRow od in dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows)
-            {
-                AddNew.AppendFormat(@" ");
-                AddNew.AppendFormat(@" INSERT INTO NEWDB.WSCMIBOUNS(ID,MI001,MI037OLD,MI037NEW,DATE,FORM,STATUS) VALUES('{0}','{1}',{2},{3},'{4}','{5}','{6}'); ", od["ID"].ToString(), od["MI001"].ToString(), od["MI037OLD"].ToString(), od["MI037NEW"].ToString(), od["DATE"].ToString(), od["FORM"].ToString(), od["STATUS"].ToString());
-                AddNew.AppendFormat(@" ");
+            //foreach (DataRow od in dsMYSQLWSCMIBOUNS.Tables["MYSQLWSCMIBOUNS"].Rows)
+            //{
+            //    AddNew.AppendFormat(@" ");
+            //    AddNew.AppendFormat(@" INSERT INTO NEWDB.WSCMIBOUNS(ID,MI001,MI037OLD,MI037NEW,DATE,FORM,STATUS) VALUES('{0}','{1}',{2},{3},'{4}','{5}','{6}'); ", od["ID"].ToString(), od["MI001"].ToString(), od["MI037OLD"].ToString(), od["MI037NEW"].ToString(), od["DATE"].ToString(), od["FORM"].ToString(), od["STATUS"].ToString());
+            //    AddNew.AppendFormat(@" ");
 
-            }
+            //}
 
-            AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
-            AddNewCmd.Connection = conn;
-            //執行新增
-            AddNewCmd.ExecuteNonQuery();
+            //AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            //AddNewCmd.Connection = conn;
+            ////執行新增
+            //AddNewCmd.ExecuteNonQuery();
         }
 
         public void UPDATEMSSQLWSCMIBOUNS()
@@ -801,26 +800,26 @@ namespace TKWEBPOSSYNC
         }
         public void UPDATEMYSQLWSCMIBOUNS()
         {
-            string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
+            //string connString = ConfigurationManager.ConnectionStrings["mysql"].ConnectionString;
 
-            MySqlConnection conn = new MySqlConnection(connString);
-            conn.Open();
+            //MySqlConnection conn = new MySqlConnection(connString);
+            //conn.Open();
 
-            MySqlCommand AddNewCmd;
-            StringBuilder AddNew = new StringBuilder();
+            //MySqlCommand AddNewCmd;
+            //StringBuilder AddNew = new StringBuilder();
 
-            foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
-            {
-                AddNew.AppendFormat(@" UPDATE NEWDB.WSCMIBOUNS SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}' ;" ,od["MI001"].ToString());
-                AddNew.AppendFormat(@" ");
-                AddNew.AppendFormat(@" ");
+            //foreach (DataRow od in dsMSSQLWSCMIBOUNS.Tables["MSSQLWSCMIBOUNS"].Rows)
+            //{
+            //    AddNew.AppendFormat(@" UPDATE NEWDB.WSCMIBOUNS SET STATUS='Y' WHERE FORM='WEB' AND MI001='{0}' ;" ,od["MI001"].ToString());
+            //    AddNew.AppendFormat(@" ");
+            //    AddNew.AppendFormat(@" ");
 
-            }
+            //}
 
-            AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
-            AddNewCmd.Connection = conn;
-            //執行新增
-            AddNewCmd.ExecuteNonQuery();
+            //AddNewCmd = new MySqlCommand(AddNew.ToString(), conn);
+            //AddNewCmd.Connection = conn;
+            ////執行新增
+            //AddNewCmd.ExecuteNonQuery();
         }
         public string GETMAXTWSCNP(string DAYNO)
         {
